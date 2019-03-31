@@ -21,7 +21,25 @@ var (
 	ErrInvalidPrefix = errors.New("prefix must be an IPv6 address prefix of /64 or less")
 )
 
+const hexDigit = "0123456789abcdef"
+
+// A EUI64 represents an EUI-64 (Extended Unique Identifier).
 type EUI64 []byte
+
+func (e EUI64) String() string {
+	if len(e) == 0 {
+		return ""
+	}
+	buf := make([]byte, 0, len(e)*3-1)
+	for i, b := range e {
+		if i > 0 {
+			buf = append(buf, ':')
+		}
+		buf = append(buf, hexDigit[b>>4])
+		buf = append(buf, hexDigit[b&0xF])
+	}
+	return string(buf)
+}
 
 // ParseIP parses an input IPv6 address to retrieve its IPv6 address prefix and
 // EUI-48 or EUI-64 MAC address.
@@ -120,6 +138,9 @@ func ParseMAC(prefix net.IP, mac net.HardwareAddr) (net.IP, error) {
 	return ip, nil
 }
 
+// MacToEui64 transforms a 48-bit MAC address into a EUI-64 address
+//
+// If mac is not in EUI-48 or EUI-64 form, ErrInvalidMAC is returned.
 func MacToEui64(mac net.HardwareAddr) (EUI64, error) {
 	// MAC must be in EUI-48 or EUI64 form
 	if len(mac) != 6 && len(mac) != 8 {
