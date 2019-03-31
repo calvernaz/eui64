@@ -21,6 +21,8 @@ var (
 	ErrInvalidPrefix = errors.New("prefix must be an IPv6 address prefix of /64 or less")
 )
 
+type EUI64 []byte
+
 // ParseIP parses an input IPv6 address to retrieve its IPv6 address prefix and
 // EUI-48 or EUI-64 MAC address.
 //
@@ -116,6 +118,26 @@ func ParseMAC(prefix net.IP, mac net.HardwareAddr) (net.IP, error) {
 	copy(ip[13:16], mac[3:6])
 
 	return ip, nil
+}
+
+func MacToEui64(mac net.HardwareAddr) (EUI64, error) {
+	// MAC must be in EUI-48 or EUI64 form
+	if len(mac) != 6 && len(mac) != 8 {
+		return nil, ErrInvalidMAC
+	}
+
+	// create EUI64
+	eui64 := make(EUI64, 8)
+
+	// split mac into 24 bits parts and inject 0xfffe
+	copy(eui64[0:3], mac[0:3])
+	copy(eui64[3:], []byte { 0xff, 0xfe })
+	copy(eui64[5:], mac[3:])
+
+	// flip the 7th bit
+	eui64[0] ^= 0x2
+
+	return eui64, nil
 }
 
 // isAllZeroes returns if a byte slice is entirely populated with byte 0.

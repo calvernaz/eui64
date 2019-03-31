@@ -212,6 +212,35 @@ func TestParseMAC(t *testing.T) {
 	}
 }
 
+func TestMacToEui64(t *testing.T) {
+	var tests = []struct {
+		desc string
+		mac    net.HardwareAddr
+		eui64  EUI64
+		err    error
+	}{
+		{
+			desc: "Mac address 00:15:2b:e4:9b:60 to EUI-64 address",
+			mac: net.HardwareAddr{0x00, 0x15, 0x2b, 0xe4, 0x9b, 0x60},
+			eui64: EUI64{ 0x02, 0x15, 0x2b, 0xff, 0xfe, 0xe4, 0x9b, 0x60},
+			err:    nil,
+		},
+	}
+
+	for _, tt := range tests {
+		eui64, err := MacToEui64(tt.mac)
+		if err != nil {
+			if want, got := tt.err, err; want != got {
+
+			}
+			continue
+		}
+		if want, got := tt.eui64, eui64; !bytes.Equal(want, got) {
+			t.Fatalf("test %q want: %v, got %v", tt.desc, want, got)
+		}
+	}
+}
+
 // ExampleParseIP demonstrates usage of ParseIP.  This example parses an
 // input IPv6 address into a IPv6 prefix and a MAC address.
 func ExampleParseIP() {
